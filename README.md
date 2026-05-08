@@ -19,7 +19,7 @@
 | --- | --- |
 | Frontend | React 19, Vite 8, lucide-react, nginx |
 | Backend | Java 25, Spring Boot 4, Spring Web MVC, Spring Data JPA, Bean Validation |
-| Database | PostgreSQL 17 |
+| Database | PostgreSQL (로컬 외부 공유, EC2 auto DB `house` 스키마) |
 | Local runtime | Docker Compose |
 | Test | JUnit, MockMvc, H2, ESLint, Vite build |
 
@@ -27,30 +27,62 @@
 
 ```text
 .
-├── back/                 # Spring Boot REST API
-├── front/                # React/Vite frontend and nginx proxy config
-├── docs/infra.md         # EC2, Docker Hub, nginx, 배포 정보
-├── docker-compose.yml    # 로컬 개발용 Compose 구성
+├── back/                # Spring Boot REST API
+├── front/               # React/Vite frontend and nginx proxy config
+├── docs/infra.md        # EC2, Docker Hub, nginx, 배포 정보
+├── docker-compose.yml   # 단일 Compose, 환경값은 .env에서 주입
+├── .env.sample          # .env 템플릿
+├── .env                 # 실제 환경값 (gitignore)
 └── README.md
 ```
 
 ## 로컬 실행
 
+### 사전 준비
+
+이 프로젝트는 외부 postgres에 연결한다. 호스트에 postgres 컨테이너가 미리 떠 있어야 하고, 그 컨테이너는 같은 docker network에 있어야 한다.
+
+postgres 컨테이너 예시:
+
 ```bash
-docker compose up --build
+docker run -d --name postgres -p 127.0.0.1:5432:5432 \
+  -e POSTGRES_USER=yangyag \
+  -e POSTGRES_PASSWORD=강한_비밀번호 \
+  -e POSTGRES_DB=yangyag \
+  postgres:18
 ```
 
-브라우저에서 다음 주소로 접속합니다.
+(비밀번호는 임의의 강한 비밀번호로 대체.)
+
+postgres 안에 `house` 역할과 `house` 스키마를 만든다 (역할은 `house` 스키마에만 한정 권한). 상세 SQL은 `docs/infra.md`의 'DB 스키마' 섹션 참고.
+
+### .env 준비
+
+```bash
+cp .env.sample .env
+# .env를 열어 DB_PASSWORD 등 환경값을 채운다.
+```
+
+### 기동
+
+```bash
+docker compose up -d --build
+docker network connect $(grep '^NETWORK_NAME=' .env | cut -d= -f2) postgres
+docker compose restart back
+```
+
+(첫 실행에서만 postgres를 compose 네트워크에 attach. 이후로는 `docker compose up -d`만 하면 된다.)
+
+브라우저에서 접속:
 
 ```text
 http://localhost:8085
 ```
 
-로컬 Compose 서비스:
+서비스 구성:
 
-- `front`: React 정적 파일을 nginx로 제공하고 `/api` 요청을 백엔드로 프록시합니다.
-- `back`: Spring Boot REST API입니다.
-- `postgres`: 재고 데이터를 저장합니다.
+- `back`: Spring Boot REST API. `.env`의 환경 변수로 외부 postgres에 연결.
+- `front`: React 정적 파일을 nginx로 서빙하고 `/api` 요청을 back으로 프록시.
 
 ## 개발 명령
 
@@ -216,6 +248,7 @@ docker push yangyag2/house-front:latest
   - 로컬 `http://localhost:8085`
   - 운영 `https://yangyag2.duckdns.org`
   - 390px 모바일 크기에서 앱 제목, 모바일 카드 목록, 등록/수정 폼 구분, 가로 스크롤 여부 확인
+- 2026-05-08: 로컬과 EC2 모두 외부 공유 postgres + house 스키마로 전환 완료. 기존 데이터 복원 및 API 동작 검증 완료.
 
 Chromium 확인 시 생성한 참고 스크린샷:
 

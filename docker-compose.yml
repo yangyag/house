@@ -1,53 +1,36 @@
 services:
-  postgres:
-    image: postgres:17
-    container_name: house-postgres
-    environment:
-      POSTGRES_DB: house_inventory
-      POSTGRES_USER: house
-      POSTGRES_PASSWORD: house
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U house -d house_inventory"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-    networks:
-      - house-network
-
   back:
+    image: yangyag2/house-back:latest
     build:
       context: ./back
-    container_name: house-back
+    container_name: ${CONTAINER_PREFIX}-back
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/house_inventory
-      SPRING_DATASOURCE_USERNAME: house
-      SPRING_DATASOURCE_PASSWORD: house
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?currentSchema=${DB_SCHEMA}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      APP_CORS_ALLOWED_ORIGINS: http://localhost:8085,http://43.202.113.123:8085,http://yangyag2.duckdns.org,https://yangyag2.duckdns.org
-    depends_on:
-      postgres:
-        condition: service_healthy
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: ${DB_SCHEMA}
+      APP_CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
     expose:
       - "8080"
     networks:
-      - house-network
+      - house-net
+    restart: unless-stopped
 
   front:
+    image: yangyag2/house-front:latest
     build:
       context: ./front
-    container_name: house-front
+    container_name: ${CONTAINER_PREFIX}-front
     depends_on:
       - back
     ports:
-      - "8085:80"
+      - "${FRONT_PORT}:80"
     networks:
-      - house-network
-
-volumes:
-  postgres-data:
+      - house-net
+    restart: unless-stopped
 
 networks:
-  house-network:
+  house-net:
+    name: ${NETWORK_NAME}
     driver: bridge

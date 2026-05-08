@@ -10,3 +10,6 @@ front/node_modules/
 front/dist/
 
 *.log
+
+# 환경별 시크릿 (.env.sample만 커밋)
+.env
