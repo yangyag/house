@@ -56,7 +56,7 @@ CORS_ALLOWED_ORIGINS=http://localhost:8085,http://43.202.113.123:8085,http://yan
 - 프론트 이미지: `yangyag2/house-front:latest`
 - 백엔드 이미지: `yangyag2/house-back:latest`
 - 현재 EC2 배포 digest:
-  - front: `sha256:4694c8d778517c70c9166e1860a7e9e8b045a903413907c2e17f4c511ba32ecf`
+  - front: `sha256:e48db97f1c3d82c61997cdc9eb00579f797a01275b4d813981f536347b1d0f32`
   - back: `sha256:bee1f6f08f26752d2ef1543c1d83b7b694e07f878c63b91956239d795588d0b4`
 
 Docker Hub 비밀번호나 토큰은 이 저장소에 기록하지 않는다. 필요하면 로컬에서 `docker login`으로 인증한다.

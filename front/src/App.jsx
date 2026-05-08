@@ -85,6 +85,7 @@ function App() {
   const [form, setForm] = useState(emptyForm)
   const [editingId, setEditingId] = useState(null)
   const [query, setQuery] = useState('')
+  const [outOfStockOnly, setOutOfStockOnly] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState('')
@@ -121,7 +122,7 @@ function App() {
   const summary = useMemo(() => {
     const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0)
     const locations = new Set(items.map((item) => item.location).filter(Boolean))
-    const lowStock = items.filter((item) => item.quantity <= 1).length
+    const lowStock = items.filter((item) => item.quantity === 0).length
 
     return {
       totalItems: items.length,
@@ -130,6 +131,10 @@ function App() {
       lowStock,
     }
   }, [items])
+
+  const displayItems = useMemo(() => {
+    return outOfStockOnly ? items.filter((item) => item.quantity === 0) : items
+  }, [items, outOfStockOnly])
 
   function updateForm(field, value) {
     setForm((current) => ({ ...current, [field]: value }))
@@ -257,10 +262,15 @@ function App() {
             <strong>{summary.locations}</strong>
             <span>보관 위치</span>
           </div>
-          <div>
+          <button
+            type="button"
+            className={outOfStockOnly ? 'stat-card-button stat-card-active' : 'stat-card-button'}
+            onClick={() => setOutOfStockOnly(!outOfStockOnly)}
+            aria-pressed={outOfStockOnly}
+          >
             <strong>{summary.lowStock}</strong>
             <span>부족 후보</span>
-          </div>
+          </button>
         </div>
       </section>
 
@@ -375,7 +385,12 @@ function App() {
                 <span className="sr-only">검색</span>
                 <input
                   value={query}
-                  onChange={(event) => setQuery(event.target.value)}
+                  onChange={(event) => {
+                    setQuery(event.target.value)
+                    if (event.target.value.trim() && outOfStockOnly) {
+                      setOutOfStockOnly(false)
+                    }
+                  }}
                   placeholder="이름, 위치, 비고 검색"
                 />
               </label>
@@ -414,7 +429,7 @@ function App() {
                 )}
 
                 {!isLoading &&
-                  items.map((item) => {
+                  displayItems.map((item) => {
                     const { isOutOfStock, quantityClassName } = getQuantityPresentation(item.quantity)
 
                     return (
@@ -459,10 +474,10 @@ function App() {
                     )
                   })}
 
-                {!isLoading && items.length === 0 && (
+                {!isLoading && displayItems.length === 0 && (
                   <tr>
                     <td colSpan="6" className="empty-cell">
-                      등록된 물품이 없습니다.
+                      {outOfStockOnly ? '수량이 0인 물품이 없습니다.' : '등록된 물품이 없습니다.'}
                     </td>
                   </tr>
                 )}
@@ -476,7 +491,7 @@ function App() {
             )}
 
             {!isLoading &&
-              items.map((item) => {
+              displayItems.map((item) => {
                 const { isOutOfStock, quantityClassName } = getQuantityPresentation(item.quantity)
 
                 return (
@@ -529,8 +544,8 @@ function App() {
                 )
               })}
 
-            {!isLoading && items.length === 0 && (
-              <p className="mobile-list-state">등록된 물품이 없습니다.</p>
+            {!isLoading && displayItems.length === 0 && (
+              <p className="mobile-list-state">{outOfStockOnly ? '수량이 0인 물품이 없습니다.' : '등록된 물품이 없습니다.'}</p>
             )}
           </div>
         </section>
