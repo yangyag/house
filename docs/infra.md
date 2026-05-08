@@ -27,13 +27,13 @@ ssh -i /home/yangyag/aws/test-keypair.pem ubuntu@43.202.113.123
 
 - 배포 디렉터리: `/home/ubuntu/house-inventory`
 - Docker Compose 파일: `/home/ubuntu/house-inventory/docker-compose.yml`
-- 환경변수 파일: `/home/ubuntu/house-inventory/.env` (gitignore 대상이라 EC2에만 존재)
+- 환경변수 파일: `/home/ubuntu/house-inventory/house.env` (gitignore 대상이라 EC2에만 존재)
 - nginx site 파일: `/etc/nginx/sites-enabled/yangyag2-house`
 - 인증서 경로:
   - `/etc/letsencrypt/live/yangyag2.duckdns.org/fullchain.pem`
   - `/etc/letsencrypt/live/yangyag2.duckdns.org/privkey.pem`
 
-EC2 `.env`의 주요 키 (운영용 실제 값은 EC2 호스트에만 보관):
+EC2 `house.env`의 주요 키 (운영용 실제 값은 EC2 호스트에만 보관):
 
 ```text
 CONTAINER_PREFIX=house-inventory
@@ -44,7 +44,7 @@ DB_HOST=auto-postgres
 DB_PORT=5432
 DB_NAME=auto
 DB_USER=house
-DB_PASSWORD=<EC2의 .env 참조>
+DB_PASSWORD=<EC2의 house.env 참조>
 DB_SCHEMA=house
 
 CORS_ALLOWED_ORIGINS=http://localhost:8085,http://43.202.113.123:8085,http://yangyag2.duckdns.org,https://yangyag2.duckdns.org
@@ -75,7 +75,7 @@ EC2에서는 다음 컨테이너가 Docker Compose로 실행된다.
 - `house-inventory-back`
   - image: `yangyag2/house-back:latest`
   - internal port: `8080`
-  - SPRING_DATASOURCE_URL은 `.env`의 `DB_HOST`/`DB_NAME`/`DB_SCHEMA`에서 조립됨
+  - SPRING_DATASOURCE_URL은 `house.env`의 `DB_HOST`/`DB_NAME`/`DB_SCHEMA`에서 조립됨
 
 EC2 배포의 postgres 토폴로지:
 
@@ -95,8 +95,8 @@ docker push yangyag2/house-front:latest
 
 ssh -i /home/yangyag/aws/test-keypair.pem ubuntu@43.202.113.123
 cd /home/ubuntu/house-inventory
-docker compose pull front
-docker compose up -d front
+docker compose --env-file house.env pull front
+docker compose --env-file house.env up -d front
 ```
 
 백엔드만 변경한 경우:
@@ -107,8 +107,8 @@ docker push yangyag2/house-back:latest
 
 ssh -i /home/yangyag/aws/test-keypair.pem ubuntu@43.202.113.123
 cd /home/ubuntu/house-inventory
-docker compose pull back
-docker compose up -d back
+docker compose --env-file house.env pull back
+docker compose --env-file house.env up -d back
 ```
 
 전체 재기동:
@@ -116,8 +116,8 @@ docker compose up -d back
 ```bash
 ssh -i /home/yangyag/aws/test-keypair.pem ubuntu@43.202.113.123
 cd /home/ubuntu/house-inventory
-docker compose pull
-docker compose up -d
+docker compose --env-file house.env pull
+docker compose --env-file house.env up -d
 ```
 
 EC2에서는 `--build`를 쓰지 않는다. 이미지는 항상 Docker Hub에서 pull한다.
@@ -128,17 +128,17 @@ EC2 컨테이너 상태:
 
 ```bash
 ssh -i /home/yangyag/aws/test-keypair.pem ubuntu@43.202.113.123 \
-  'cd /home/ubuntu/house-inventory && docker compose ps'
+  'cd /home/ubuntu/house-inventory && docker compose --env-file house.env ps'
 ```
 
 로그 확인:
 
 ```bash
 ssh -i /home/yangyag/aws/test-keypair.pem ubuntu@43.202.113.123 \
-  'cd /home/ubuntu/house-inventory && docker compose logs --tail=120 front'
+  'cd /home/ubuntu/house-inventory && docker compose --env-file house.env logs --tail=120 front'
 
 ssh -i /home/yangyag/aws/test-keypair.pem ubuntu@43.202.113.123 \
-  'cd /home/ubuntu/house-inventory && docker compose logs --tail=120 back'
+  'cd /home/ubuntu/house-inventory && docker compose --env-file house.env logs --tail=120 back'
 ```
 
 서비스 확인:
@@ -159,7 +159,7 @@ ssh -i /home/yangyag/aws/test-keypair.pem ubuntu@43.202.113.123 \
 
 - `house` 역할(user)은 auto-postgres의 auto DB의 house 스키마에 한정된 권한을 갖는다.
 - auto-postgres는 host `127.0.0.1:5432` 바인딩으로 실행되어 외부 노출이 없다.
-- 비밀번호 등 실제 값은 EC2의 `/home/ubuntu/house-inventory/.env`에 보관되며 git에 들어가지 않는다.
+- 비밀번호 등 실제 값은 EC2의 `/home/ubuntu/house-inventory/house.env`에 보관되며 git에 들어가지 않는다.
 
 `auto` DB에 `house` 역할과 `house` 스키마를 만드는 SQL 예시:
 
@@ -192,4 +192,4 @@ ALTER DEFAULT PRIVILEGES FOR ROLE house IN SCHEMA house GRANT ALL ON SEQUENCES T
 
 - SSH private key 파일 자체는 저장소에 추가하지 않는다.
 - Docker Hub 비밀번호, 토큰, 개인 인증 정보는 문서와 저장소에 기록하지 않는다.
-- `.env`는 `.gitignore` 대상이라 git에 들어가지 않는다. EC2에 직접 보관한다.
+- `house.env`는 `.gitignore` 대상이라 git에 들어가지 않는다. EC2에 직접 보관한다.
