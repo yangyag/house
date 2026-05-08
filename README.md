@@ -30,9 +30,9 @@
 ├── back/                # Spring Boot REST API
 ├── front/               # React/Vite frontend and nginx proxy config
 ├── docs/infra.md        # EC2, Docker Hub, nginx, 배포 정보
-├── docker-compose.yml   # 단일 Compose, 환경값은 house.env에서 주입
-├── house.env.sample     # house.env 템플릿
-├── house.env            # 실제 환경값 (gitignore)
+├── docker-compose.yml   # 단일 Compose, 환경값은 .env에서 주입
+├── .env.sample          # .env 템플릿
+├── .env                 # 실제 환경값 (gitignore)
 └── README.md
 ```
 
@@ -56,24 +56,24 @@ docker run -d --name postgres -p 127.0.0.1:5432:5432 \
 
 postgres 안에 `house` 역할과 `house` 스키마를 만든다 (역할은 `house` 스키마에만 한정 권한). 상세 SQL은 `docs/infra.md`의 'DB 스키마' 섹션 참고.
 
-### house.env 준비
+### .env 준비
 
 ```bash
-cp house.env.sample house.env
-# house.env를 열어 DB_PASSWORD 등 환경값을 채운다.
+cp .env.sample .env
+# .env를 열어 DB_PASSWORD 등 환경값을 채운다.
 ```
 
-`house.env`는 `.gitignore` 대상이라 저장소에 들어가지 않는다. `house.env.sample`이 템플릿이다.
+`.env`는 `.gitignore` 대상이라 저장소에 들어가지 않는다. `.env.sample`이 템플릿이다.
 
 ### 기동
 
 ```bash
-docker compose --env-file house.env up -d --build
-docker network connect $(grep '^NETWORK_NAME=' house.env | cut -d= -f2) postgres
-docker compose --env-file house.env restart back
+docker compose up -d --build
+docker network connect $(grep '^NETWORK_NAME=' .env | cut -d= -f2) postgres
+docker compose restart back
 ```
 
-(첫 실행에서만 postgres를 compose 네트워크에 attach. 이후로는 `docker compose --env-file house.env up -d`만 하면 된다. 모든 docker compose 명령에 `--env-file house.env` 플래그가 필요하다 — 파일명이 `.env`가 아니라서 자동 로드되지 않기 때문이다.)
+(첫 실행에서만 postgres를 compose 네트워크에 attach. 이후로는 `docker compose up -d`만 하면 된다. 파일명이 `.env`이면 docker compose가 자동으로 로드한다.)
 
 브라우저에서 접속:
 
@@ -83,7 +83,7 @@ http://localhost:8085
 
 서비스 구성:
 
-- `back`: Spring Boot REST API. `house.env`의 환경 변수로 외부 postgres에 연결.
+- `back`: Spring Boot REST API. `.env`의 환경 변수로 외부 postgres에 연결.
 - `front`: React 정적 파일을 nginx로 서빙하고 `/api` 요청을 back으로 프록시.
 
 ## 개발 명령

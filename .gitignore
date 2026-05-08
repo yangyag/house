@@ -11,5 +11,5 @@ front/dist/
 
 *.log
 
-# 환경별 시크릿 (house.env.sample만 커밋)
-house.env
+# 환경별 시크릿 (.env.sample만 커밋)
+.env
