@@ -676,7 +676,7 @@ tbody tr:last-child td {
   }
 
   .list-panel {
-    order: 1;
+    order: 2;
     padding: 16px 12px 18px;
     border: 0;
     border-radius: 0;
@@ -685,7 +685,7 @@ tbody tr:last-child td {
   }
 
   .editor-panel {
-    order: 2;
+    order: 1;
     padding: 20px 16px 26px;
     border-width: 0;
     border-radius: 0;
