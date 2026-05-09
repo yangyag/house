@@ -112,10 +112,15 @@ h2 {
   outline-offset: 2px;
 }
 
-.stats .stat-card-active {
-  border-color: #245b3d;
-  background: rgba(36, 91, 61, 0.08);
-  box-shadow: 0 0 0 2px #245b3d;
+.stats .stat-card-button.stat-card-active {
+  border-color: #d83b2d;
+  background: #fff5f3;
+  box-shadow: 0 0 0 3px rgba(216, 59, 45, 0.86);
+}
+
+.stats .stat-card-button.stat-card-active strong,
+.stats .stat-card-button.stat-card-active span {
+  color: #9e2f28;
 }
 
 .stats strong {
@@ -654,6 +659,12 @@ tbody tr:last-child td {
     padding: 9px 8px;
     border-radius: 8px;
     background: #ffffff;
+  }
+
+  .stats .stat-card-button.stat-card-active {
+    border-color: #d83b2d;
+    background: #fff5f3;
+    box-shadow: 0 0 0 3px rgba(216, 59, 45, 0.86);
   }
 
   .stats strong {

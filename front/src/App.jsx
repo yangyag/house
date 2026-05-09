@@ -91,6 +91,7 @@ function App() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const editorPanelRef = useRef(null)
+  const listPanelRef = useRef(null)
   const nameInputRef = useRef(null)
 
   const loadItems = useCallback(async (keyword = query) => {
@@ -158,6 +159,19 @@ function App() {
       editorPanelRef.current?.scrollIntoView({ block: 'start' })
       nameInputRef.current?.focus({ preventScroll: true })
     })
+  }
+
+  function revealListPanelOnMobile() {
+    if (!window.matchMedia('(max-width: 720px)').matches) return
+
+    window.requestAnimationFrame(() => {
+      listPanelRef.current?.scrollIntoView({ block: 'start' })
+    })
+  }
+
+  function toggleOutOfStockFilter() {
+    setOutOfStockOnly((current) => !current)
+    revealListPanelOnMobile()
   }
 
   function startEdit(item) {
@@ -265,7 +279,7 @@ function App() {
           <button
             type="button"
             className={outOfStockOnly ? 'stat-card-button stat-card-active' : 'stat-card-button'}
-            onClick={() => setOutOfStockOnly(!outOfStockOnly)}
+            onClick={toggleOutOfStockFilter}
             aria-pressed={outOfStockOnly}
           >
             <strong>{summary.lowStock}</strong>
@@ -370,7 +384,7 @@ function App() {
           </form>
         </aside>
 
-        <section className="list-panel" aria-label="물품 목록">
+        <section className="list-panel" aria-label="물품 목록" ref={listPanelRef}>
           <div className="list-toolbar">
             <div>
               <p className="eyebrow">Inventory</p>
