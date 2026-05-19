@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>인프라 정보 - 하유니 집 물건 관리 앱</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #1f2328;
+    --muted: #57606a;
+    --border: #d0d7de;
+    --accent: #0969da;
+    --code-bg: #f6f8fa;
+    --code-fg: #1f2328;
+    --pre-bg: #f6f8fa;
+    --table-row: #f6f8fa;
+    --warn-bg: #fff8c5;
+    --warn-border: #d4a72c;
+    --note-bg: #ddf4ff;
+    --note-border: #0969da;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117;
+      --fg: #e6edf3;
+      --muted: #8d96a0;
+      --border: #30363d;
+      --accent: #2f81f7;
+      --code-bg: #161b22;
+      --code-fg: #e6edf3;
+      --pre-bg: #161b22;
+      --table-row: #161b22;
+      --warn-bg: #3a2e04;
+      --warn-border: #9e6a03;
+      --note-bg: #0c2d6b;
+      --note-border: #2f81f7;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR",
+                 "Apple SD Gothic Neo", "Malgun Gothic", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.7;
+    font-size: 16px;
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  nav.toc {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    max-height: 100vh;
+    overflow-y: auto;
+    padding: 24px 16px;
+    border-right: 1px solid var(--border);
+    font-size: 14px;
+  }
+  nav.toc h2 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 0 0 12px;
+  }
+  nav.toc ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: toc;
+  }
+  nav.toc li {
+    counter-increment: toc;
+    margin: 4px 0;
+  }
+  nav.toc a {
+    display: block;
+    padding: 6px 8px;
+    color: var(--muted);
+    text-decoration: none;
+    border-radius: 6px;
+  }
+  nav.toc a::before {
+    content: counter(toc) ". ";
+    color: var(--muted);
+    margin-right: 4px;
+  }
+  nav.toc a:hover {
+    background: var(--code-bg);
+    color: var(--fg);
+  }
+  main {
+    padding: 32px 40px 64px;
+    min-width: 0;
+  }
+  h1 {
+    font-size: 32px;
+    margin: 0 0 8px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  h1 + p.lead {
+    color: var(--muted);
+    margin: 0 0 32px;
+  }
+  h2 {
+    font-size: 22px;
+    margin: 40px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 {
+    font-size: 17px;
+    margin: 24px 0 8px;
+  }
+  p { margin: 0 0 12px; }
+  ul, ol { padding-left: 24px; margin: 0 0 12px; }
+  li { margin: 4px 0; }
+  code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.9em;
+    background: var(--code-bg);
+    color: var(--code-fg);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  pre {
+    background: var(--pre-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    margin: 8px 0 16px;
+  }
+  pre code {
+    background: transparent;
+    padding: 0;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  a { color: var(--accent); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0 16px;
+    font-size: 14px;
+  }
+  th, td {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: var(--code-bg); }
+  tbody tr:nth-child(even) { background: var(--table-row); }
+  td code { white-space: nowrap; }
+
+  .callout {
+    border-left: 4px solid var(--note-border);
+    background: var(--note-bg);
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    margin: 12px 0;
+  }
+  .callout.warn {
+    border-left-color: var(--warn-border);
+    background: var(--warn-bg);
+  }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout strong { display: block; margin-bottom: 4px; }
+
+  .meta-grid {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 8px 16px;
+    margin: 0 0 16px;
+    font-size: 15px;
+  }
+  .meta-grid dt {
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .meta-grid dd {
+    margin: 0;
+    word-break: break-all;
+  }
+
+  @media (max-width: 820px) {
+    .layout { grid-template-columns: 1fr; }
+    nav.toc {
+      position: static;
+      max-height: none;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+    main { padding: 24px 20px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="toc" aria-label="목차">
+  <h2>목차</h2>
+  <ol>
+    <li><a href="#access">접속 정보</a></li>
+    <li><a href="#domain">도메인과 포트</a></li>
+    <li><a href="#deploy-path">EC2 배포 위치</a></li>
+    <li><a href="#docker-hub">Docker Hub</a></li>
+    <li><a href="#containers">컨테이너 구성</a></li>
+    <li><a href="#deploy-commands">배포 명령</a></li>
+    <li><a href="#checks">점검 명령</a></li>
+    <li><a href="#schema">DB 스키마</a></li>
+    <li><a href="#backup">백업 / 복구 메모</a></li>
+    <li><a href="#caveats">주의</a></li>
+  </ol>
+</nav>
+
+<main>
+<h1>인프라 정보</h1>
+<p class="lead">이 문서는 하유니 집 물건 관리 앱의 현재 EC2 접속 방법, Docker Hub 이미지, 배포 위치를 기록한다.</p>
+
+<section id="access">
+<h2>1. 접속 정보</h2>
+<dl class="meta-grid">
+  <dt>EC2 사용자</dt>           <dd><code>ubuntu</code></dd>
+  <dt>EC2 public IP</dt>        <dd><code>43.202.113.123</code></dd>
+  <dt>SSH key</dt>              <dd><code>/home/yangyag/aws/test-keypair.pem</code></dd>
+</dl>
+<h3>SSH 접속</h3>
+<pre><code>ssh -i /home/yangyag/aws/test-keypair.pem ubuntu@43.202.113.123</code></pre>
+</section>
+
+<section id="domain">
+<h2>2. 도메인과 포트</h2>
+<ul>
+  <li>서비스 도메인: <a href="https://yangyag2.duckdns.org">https://yangyag2.duckdns.org</a></li>
+  <li>DuckDNS 매핑: <code>yangyag2.duckdns.org</code> → <code>43.202.113.123</code></li>
+  <li>앱 직접 포트: <code>http://43.202.113.123:8085</code></li>
+</ul>
+<h3>nginx 프록시</h3>
+<table>
+  <thead><tr><th>요청</th><th>처리</th></tr></thead>
+  <tbody>
+    <tr><td><code>http://yangyag2.duckdns.org</code></td><td>HTTPS redirect</td></tr>
+    <tr><td><code>https://yangyag2.duckdns.org</code></td><td>→ <code>http://127.0.0.1:8085</code></td></tr>
+  </tbody>
+</table>
+<div class="callout">
+  <strong>참고</strong>
+  <p>기존 도메인 <code>yangyag.duckdns.org</code>는 기존 8083 서비스용으로 유지한다.</p>
+</div>
+</section>
+
+<section id="deploy-path">
+<h2>3. EC2 배포 위치</h2>
+<dl class="meta-grid">
+  <dt>배포 디렉터리</dt>        <dd><code>/home/ubuntu/house-inventory</code></dd>
+  <dt>Docker Compose 파일</dt>  <dd><code>/home/ubuntu/house-inventory/docker-compose.yml</code></dd>
+  <dt>환경변수 파일</dt>        <dd><code>/home/ubuntu/house-inventory/.env</code> (gitignore 대상, EC2에만 존재)</dd>
+  <dt>nginx site 파일</dt>      <dd><code>/etc/nginx/sites-enabled/yangyag2-house</code></dd>
+  <dt>인증서 (fullchain)</dt>   <dd><code>/etc/letsencrypt/live/yangyag2.duckdns.org/fullchain.pem</code></dd>
+  <dt>인증서 (privkey)</dt>     <dd><code>/etc/letsencrypt/live/yangyag2.duckdns.org/privkey.pem</code></dd>
+</dl>
+<h3>EC2 <code>.env</code>의 주요 키</h3>
+<p>운영용 실제 값은 EC2 호스트에만 보관된다.</p>
+<pre><code>CONTAINER_PREFIX=house-inventory
+NETWORK_NAME=house-inventory_default
+FRONT_PORT=8085
+
+DB_HOST=auto-postgres
+DB_PORT=5432
+DB_NAME=auto
+DB_USER=house
+DB_PASSWORD=&lt;EC2의 .env 참조&gt;
+DB_SCHEMA=house
+
+CORS_ALLOWED_ORIGINS=http://localhost:8085,http://43.202.113.123:8085,http://yangyag2.duckdns.org,https://yangyag2.duckdns.org</code></pre>
+</section>
+
+<section id="docker-hub">
+<h2>4. Docker Hub</h2>
+<dl class="meta-grid">
+  <dt>Docker Hub 계정</dt>      <dd><code>yangyag2</code></dd>
+  <dt>프론트 이미지</dt>        <dd><code>yangyag2/house-front:latest</code></dd>
+  <dt>백엔드 이미지</dt>        <dd><code>yangyag2/house-back:latest</code></dd>
+</dl>
+<h3>현재 EC2 배포 digest</h3>
+<dl class="meta-grid">
+  <dt>front</dt><dd><code>sha256:e48db97f1c3d82c61997cdc9eb00579f797a01275b4d813981f536347b1d0f32</code></dd>
+  <dt>back</dt> <dd><code>sha256:bee1f6f08f26752d2ef1543c1d83b7b694e07f878c63b91956239d795588d0b4</code></dd>
+</dl>
+<div class="callout warn">
+  <strong>비밀 관리</strong>
+  <p>Docker Hub 비밀번호나 토큰은 이 저장소에 기록하지 않는다. 필요하면 로컬에서 <code>docker login</code>으로 인증한다.</p>
+</div>
+<pre><code>docker login -u yangyag2</code></pre>
+</section>
+
+<section id="containers">
+<h2>5. 컨테이너 구성</h2>
+<p>EC2에서는 다음 컨테이너가 Docker Compose로 실행된다.</p>
+<table>
+  <thead>
+    <tr><th>서비스</th><th>image</th><th>port</th><th>비고</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>house-inventory-front</code></td>
+      <td><code>yangyag2/house-front:latest</code></td>
+      <td><code>8085:80</code></td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td><code>house-inventory-back</code></td>
+      <td><code>yangyag2/house-back:latest</code></td>
+      <td>internal <code>8080</code></td>
+      <td><code>SPRING_DATASOURCE_URL</code>은 <code>.env</code>의 <code>DB_HOST</code> / <code>DB_NAME</code> / <code>DB_SCHEMA</code>에서 조립됨</td>
+    </tr>
+  </tbody>
+</table>
+<h3>postgres 토폴로지</h3>
+<p>
+  <code>auto-postgres</code>는 별도의 외부 인프라(다른 Docker Compose)로 운영되는 공유 PostgreSQL이다.
+  이 프로젝트의 <code>docker-compose.yml</code>에는 postgres 서비스가 정의되지 않으며,
+  <code>house-inventory-back</code>은 <code>house-inventory_default</code> 네트워크를 통해
+  <code>auto-postgres</code> 호스트명으로 접속한다. auto-postgres는 이 네트워크에 수동으로 attach되어 있다.
+</p>
+<dl class="meta-grid">
+  <dt>database</dt><dd><code>auto</code></dd>
+  <dt>schema</dt>  <dd><code>house</code></dd>
+  <dt>user</dt>    <dd><code>house</code></dd>
+</dl>
+</section>
+
+<section id="deploy-commands">
+<h2>6. 배포 명령</h2>
+
+<h3>프론트만 변경한 경우</h3>
+<pre><code>docker build -t yangyag2/house-front:latest ./front
+docker push yangyag2/house-front:latest
+
+ssh -i /home/yangyag/aws/test-keypair.pem ubuntu@43.202.113.123
+cd /home/ubuntu/house-inventory
+docker compose pull front
+docker compose up -d front</code></pre>
+
+<h3>백엔드만 변경한 경우</h3>
+<pre><code>docker build -t yangyag2/house-back:latest ./back
+docker push yangyag2/house-back:latest
+
+ssh -i /home/yangyag/aws/test-keypair.pem ubuntu@43.202.113.123
+cd /home/ubuntu/house-inventory
+docker compose pull back
+docker compose up -d back</code></pre>
+
+<h3>전체 재기동</h3>
+<pre><code>ssh -i /home/yangyag/aws/test-keypair.pem ubuntu@43.202.113.123
+cd /home/ubuntu/house-inventory
+docker compose pull
+docker compose up -d</code></pre>
+
+<div class="callout warn">
+  <strong>주의</strong>
+  <p>EC2에서는 <code>--build</code>를 쓰지 않는다. 이미지는 항상 Docker Hub에서 pull한다.</p>
+</div>
+</section>
+
+<section id="checks">
+<h2>7. 점검 명령</h2>
+
+<h3>EC2 컨테이너 상태</h3>
+<pre><code>ssh -i /home/yangyag/aws/test-keypair.pem ubuntu@43.202.113.123 \
+  'cd /home/ubuntu/house-inventory &amp;&amp; docker compose ps'</code></pre>
+
+<h3>로그 확인</h3>
+<pre><code>ssh -i /home/yangyag/aws/test-keypair.pem ubuntu@43.202.113.123 \
+  'cd /home/ubuntu/house-inventory &amp;&amp; docker compose logs --tail=120 front'
+
+ssh -i /home/yangyag/aws/test-keypair.pem ubuntu@43.202.113.123 \
+  'cd /home/ubuntu/house-inventory &amp;&amp; docker compose logs --tail=120 back'</code></pre>
+
+<h3>서비스 확인</h3>
+<pre><code>curl -I https://yangyag2.duckdns.org/
+curl https://yangyag2.duckdns.org/api/items</code></pre>
+
+<h3>nginx 설정 확인</h3>
+<pre><code>ssh -i /home/yangyag/aws/test-keypair.pem ubuntu@43.202.113.123 \
+  'sudo nginx -t &amp;&amp; sudo systemctl status nginx --no-pager'</code></pre>
+</section>
+
+<section id="schema">
+<h2>8. DB 스키마</h2>
+<ul>
+  <li><code>house</code> 역할(user)은 auto-postgres의 <code>auto</code> DB의 <code>house</code> 스키마에 한정된 권한을 갖는다.</li>
+  <li>auto-postgres는 host <code>127.0.0.1:5432</code> 바인딩으로 실행되어 외부 노출이 없다.</li>
+  <li>비밀번호 등 실제 값은 EC2의 <code>/home/ubuntu/house-inventory/.env</code>에 보관되며 git에 들어가지 않는다.</li>
+</ul>
+<h3><code>auto</code> DB에 <code>house</code> 역할과 <code>house</code> 스키마를 만드는 SQL 예시</h3>
+<pre><code>DO $$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'house') THEN
+    CREATE ROLE house LOGIN PASSWORD '&lt;강한_비밀번호&gt;';
+  END IF;
+END$$;
+
+CREATE SCHEMA IF NOT EXISTS house AUTHORIZATION house;
+
+GRANT CONNECT ON DATABASE auto TO house;
+GRANT USAGE, CREATE ON SCHEMA house TO house;
+ALTER DEFAULT PRIVILEGES FOR ROLE house IN SCHEMA house GRANT ALL ON TABLES TO house;
+ALTER DEFAULT PRIVILEGES FOR ROLE house IN SCHEMA house GRANT ALL ON SEQUENCES TO house;</code></pre>
+</section>
+
+<section id="backup">
+<h2>9. 백업 / 복구 메모</h2>
+<p>기존 standalone postgres에서 외부 공유 postgres로 전환할 때 받아 둔 SQL 두 파일이 EC2 호스트에 보존되어 있다.</p>
+<ul>
+  <li><code>/home/ubuntu/house-items-ec2.sql</code> — 전체 DB pg_dump</li>
+  <li><code>/home/ubuntu/house-items-ec2-house.sql</code> — house 스키마 한정 dump</li>
+</ul>
+<p>
+  기존 standalone postgres 볼륨은 검증 후 정리되어 더 이상 존재하지 않는다.
+  향후 복구 필요 시 호스트의 백업 SQL 파일을 auto-postgres의 <code>auto</code> DB <code>house</code> 스키마에 적재한다.
+</p>
+</section>
+
+<section id="caveats">
+<h2>10. 주의</h2>
+<div class="callout warn">
+  <ul>
+    <li>SSH private key 파일 자체는 저장소에 추가하지 않는다.</li>
+    <li>Docker Hub 비밀번호, 토큰, 개인 인증 정보는 문서와 저장소에 기록하지 않는다.</li>
+    <li><code>.env</code>는 <code>.gitignore</code> 대상이라 git에 들어가지 않는다. EC2에 직접 보관한다.</li>
+  </ul>
+</div>
+</section>
+</main>
+</div>
+</body>
+</html>
