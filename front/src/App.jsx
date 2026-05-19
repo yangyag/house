@@ -134,7 +134,8 @@ function App() {
   }, [items])
 
   const displayItems = useMemo(() => {
-    return outOfStockOnly ? items.filter((item) => item.quantity === 0) : items
+    if (outOfStockOnly) return items.filter((item) => item.quantity === 0)
+    return [...items].sort((a, b) => (a.quantity === 0 ? 0 : 1) - (b.quantity === 0 ? 0 : 1))
   }, [items, outOfStockOnly])
 
   function updateForm(field, value) {
