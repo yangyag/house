@@ -1,6 +1,6 @@
 # 하유니 집 물건 관리
 
-집 안 물건의 수량, 위치, 구매일, 비고를 관리하는 개인용 재고 관리 앱입니다. React 정적 프론트엔드, Spring Boot REST API, PostgreSQL 데이터베이스를 Docker Compose로 함께 실행합니다.
+집 안 물건의 수량, 위치, 구매일, 비고를 관리하는 개인용 재고 관리 앱입니다. Nuxt 3 (Vue 3 + TypeScript) 정적 프론트엔드, Spring Boot REST API, PostgreSQL 데이터베이스를 Docker Compose로 함께 실행합니다.
 
 ## 주요 기능
 
@@ -20,23 +20,43 @@
 
 | 영역 | 기술 |
 | --- | --- |
-| Frontend | React 19, Vite 8, lucide-react, nginx |
+| Frontend | Nuxt 3 (Vue 3 + TypeScript), Vite 7, @lucide/vue, nginx |
 | Backend | Java 25, Spring Boot 4, Spring Web MVC, Spring Data JPA, Bean Validation |
 | Database | PostgreSQL (로컬 외부 공유, EC2 auto DB `house` 스키마) |
 | Local runtime | Docker Compose |
-| Test | JUnit, MockMvc, H2, ESLint, Vite build |
+| Test | JUnit, MockMvc, H2, ESLint, Nuxt generate |
 
 ## 프로젝트 구조
 
 ```text
 .
 ├── back/                # Spring Boot REST API
-├── front/               # React/Vite frontend and nginx proxy config
+├── front/               # Nuxt 3 (Vue 3 + TypeScript) frontend and nginx proxy config
 ├── docs/infra.md        # EC2, Docker Hub, nginx, 배포 정보
 ├── docker-compose.yml   # 단일 Compose, 환경값은 .env에서 주입
 ├── .env.sample          # .env 템플릿
 ├── .env                 # 실제 환경값 (gitignore)
 └── README.md
+```
+
+front 디렉터리:
+
+```text
+front/
+├── app.vue                 # 루트 컴포넌트 (<NuxtPage/>)
+├── nuxt.config.ts          # Nuxt 설정 (ssr:false, 정적 생성, 전역 CSS/헤더)
+├── pages/index.vue         # 메인 화면 오케스트레이터
+├── components/             # 화면 컴포넌트
+│   ├── SummaryBand.vue     #   요약 통계 영역
+│   ├── ItemForm.vue        #   물품 등록/수정 폼
+│   └── ItemList.vue        #   데스크톱 표 + 모바일 카드 목록
+├── composables/
+│   └── useInventory.ts     #   상태/로직 싱글톤 (fetch, 검색, 저장, 삭제, 스크롤)
+├── types/inventory.ts      # 타입 정의
+├── assets/css/             # base.css(전역), app.css(화면)
+├── public/                 # favicon.svg, icons.svg
+├── nginx.conf              # /api → back:8080 프록시 + SPA fallback
+└── Dockerfile              # nuxt generate → .output/public → nginx
 ```
 
 ## 로컬 실행
@@ -87,7 +107,7 @@ http://localhost:8085
 서비스 구성:
 
 - `back`: Spring Boot REST API. `.env`의 환경 변수로 외부 postgres에 연결.
-- `front`: React 정적 파일을 nginx로 서빙하고 `/api` 요청을 back으로 프록시.
+- `front`: Nuxt 정적 생성 결과(`.output/public`)를 nginx로 서빙하고 `/api` 요청을 back으로 프록시.
 
 ## 개발 명령
 
@@ -95,8 +115,11 @@ http://localhost:8085
 
 ```bash
 cd front
-npm run lint
-npm run build
+npm install          # 의존성 설치 (최초 1회, postinstall로 nuxt prepare 실행)
+npm run dev          # 개발 서버 (http://localhost:3000)
+npm run generate     # 정적 빌드 (.output/public 생성)
+npm run typecheck    # TypeScript 타입 검사 (nuxt typecheck)
+npm run lint         # ESLint
 ```
 
 백엔드:
@@ -246,7 +269,8 @@ docker push yangyag2/house-front:latest
 개발 중 다음 검증을 수행했습니다.
 
 - `npm run lint`
-- `npm run build`
+- `npm run generate`
+- `npm run typecheck` (TypeScript 타입 검사)
 - 로컬 Docker Compose 실행 확인
 - EC2 배포 후 운영 URL 응답 확인
 - Chromium 기반 모바일 viewport 확인
@@ -254,6 +278,7 @@ docker push yangyag2/house-front:latest
   - 운영 `https://yangyag2.duckdns.org`
   - 390px 모바일 크기에서 앱 제목, 모바일 카드 목록, 등록/수정 폼 구분, 가로 스크롤 여부 확인
 - 2026-05-08: 로컬과 EC2 모두 외부 공유 postgres + house 스키마로 전환 완료. 기존 데이터 복원 및 API 동작 검증 완료.
+- 2026-07-26: 프론트를 React/Vite에서 Nuxt 3 (Vue 3 + TypeScript)로 마이그레이션. 정적 생성(`.output/public`) + nginx 정적 서빙, `/api` 프록시는 기존과 동일. 화면을 `SummaryBand`/`ItemForm`/`ItemList` 컴포넌트로, 로직을 `useInventory` composable로 분리.
 
 Chromium 확인 시 생성한 참고 스크린샷:
 
