@@ -30,9 +30,10 @@
 
 ```text
 .
+├── aws/                 # EC2 접속 스크립트 (PEM은 gitignore)
 ├── back/                # Spring Boot REST API
 ├── front/               # Nuxt 3 (Vue 3 + TypeScript) frontend and nginx proxy config
-├── docs/infra.md        # EC2, Docker Hub, nginx, 배포 정보
+├── docs/infra.html      # EC2, Docker Hub, nginx, 배포 정보
 ├── docker-compose.yml   # 단일 Compose, 환경값은 .env에서 주입
 ├── .env.sample          # .env 템플릿
 ├── .env                 # 실제 환경값 (gitignore)
@@ -77,7 +78,7 @@ docker run -d --name postgres -p 127.0.0.1:5432:5432 \
 
 (비밀번호는 임의의 강한 비밀번호로 대체.)
 
-postgres 안에 `house` 역할과 `house` 스키마를 만든다 (역할은 `house` 스키마에만 한정 권한). 상세 SQL은 `docs/infra.md`의 'DB 스키마' 섹션 참고.
+postgres 안에 `house` 역할과 `house` 스키마를 만든다 (역할은 `house` 스키마에만 한정 권한). 상세 SQL은 `docs/infra.html`의 'DB 스키마' 섹션 참고.
 
 ### .env 준비
 
@@ -247,7 +248,17 @@ DELETE /api/items/{id}
 
 ## 배포
 
-운영 배포와 EC2 인프라 정보는 [docs/infra.md](docs/infra.md)에 기록합니다.
+운영 배포와 EC2 인프라 정보는 [docs/infra.html](docs/infra.html)에 기록합니다.
+
+EC2 SSH는 저장소 루트에서 접속 스크립트를 사용합니다. 키 파일 `aws/test-keypair.pem`은 git에 넣지 않고 로컬 `aws/`에만 둡니다.
+
+```bash
+# Windows
+.\aws\connect.ps1
+
+# Linux / macOS
+./aws/connect.sh
+```
 
 현재 운영 URL:
 
@@ -262,7 +273,7 @@ docker build -t yangyag2/house-front:latest ./front
 docker push yangyag2/house-front:latest
 ```
 
-이후 EC2에서 `docker compose pull front`와 `docker compose up -d front`를 실행합니다. 자세한 명령은 [docs/infra.md](docs/infra.md)를 참고합니다.
+이후 EC2에서 `docker compose pull front`와 `docker compose up -d front`를 실행합니다. 자세한 명령은 [docs/infra.html](docs/infra.html)를 참고합니다.
 
 ## 검증 기록
 
@@ -279,6 +290,7 @@ docker push yangyag2/house-front:latest
   - 390px 모바일 크기에서 앱 제목, 모바일 카드 목록, 등록/수정 폼 구분, 가로 스크롤 여부 확인
 - 2026-05-08: 로컬과 EC2 모두 외부 공유 postgres + house 스키마로 전환 완료. 기존 데이터 복원 및 API 동작 검증 완료.
 - 2026-07-26: 프론트를 React/Vite에서 Nuxt 3 (Vue 3 + TypeScript)로 마이그레이션. 정적 생성(`.output/public`) + nginx 정적 서빙, `/api` 프록시는 기존과 동일. 화면을 `SummaryBand`/`ItemForm`/`ItemList` 컴포넌트로, 로직을 `useInventory` composable로 분리.
+- 2026-08-27: EC2 공유 postgres 컨테이너명 `auto-postgres` → `yangyag-postgres`. house-inventory `.env`의 `DB_HOST`를 맞추고 재기동 후 `/api/items` 200 확인.
 
 Chromium 확인 시 생성한 참고 스크린샷:
 
@@ -289,6 +301,6 @@ Chromium 확인 시 생성한 참고 스크린샷:
 
 ## 운영 주의사항
 
-- Docker Hub 비밀번호, 토큰, SSH private key는 저장소에 기록하지 않습니다.
+- Docker Hub 비밀번호, 토큰, SSH private key(`aws/test-keypair.pem`)는 저장소에 기록하지 않습니다.
 - 운영에 가까운 환경에서는 Compose에 직접 적힌 DB 계정과 비밀번호를 별도 secret 관리로 분리하는 것이 좋습니다.
-- EC2 배포 digest는 배포 후 [docs/infra.md](docs/infra.md)에 갱신합니다.
+- EC2 배포 digest는 배포 후 [docs/infra.html](docs/infra.html)에 갱신합니다.

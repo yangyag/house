@@ -13,3 +13,6 @@ front/dist/
 
 # 환경별 시크릿 (.env.sample만 커밋)
 .env
+
+# SSH private keys (aws/connect.* 가 로컬 pem을 사용)
+*.pem
