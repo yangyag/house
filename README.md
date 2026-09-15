@@ -22,7 +22,7 @@
 | --- | --- |
 | Frontend | Nuxt 3 (Vue 3 + TypeScript), Vite 7, @lucide/vue, nginx |
 | Backend | Java 25, Spring Boot 4, Spring Web MVC, Spring Data JPA, Bean Validation |
-| Database | PostgreSQL (로컬 외부 공유, EC2 auto DB `house` 스키마) |
+| Database | PostgreSQL (로컬 외부 공유, EC2 app DB `house` 스키마) |
 | Local runtime | Docker Compose |
 | Test | JUnit, MockMvc, H2, ESLint, Nuxt generate |
 
@@ -72,13 +72,13 @@ postgres 컨테이너 예시:
 docker run -d --name postgres -p 127.0.0.1:5432:5432 \
   -e POSTGRES_USER=yangyag \
   -e POSTGRES_PASSWORD=강한_비밀번호 \
-  -e POSTGRES_DB=yangyag \
+  -e POSTGRES_DB=app \
   postgres:18
 ```
 
 (비밀번호는 임의의 강한 비밀번호로 대체.)
 
-postgres 안에 `house` 역할과 `house` 스키마를 만든다 (역할은 `house` 스키마에만 한정 권한). 상세 SQL은 `docs/infra.html`의 'DB 스키마' 섹션 참고.
+app DB 안에 `house` 스키마를 만든다 (owner `yangyag`). 예: `CREATE SCHEMA IF NOT EXISTS house AUTHORIZATION yangyag;`. 상세 SQL은 `docs/infra.html`의 'DB 스키마' 섹션 참고.
 
 ### .env 준비
 
@@ -291,6 +291,7 @@ docker push yangyag2/house-front:latest
 - 2026-05-08: 로컬과 EC2 모두 외부 공유 postgres + house 스키마로 전환 완료. 기존 데이터 복원 및 API 동작 검증 완료.
 - 2026-07-26: 프론트를 React/Vite에서 Nuxt 3 (Vue 3 + TypeScript)로 마이그레이션. 정적 생성(`.output/public`) + nginx 정적 서빙, `/api` 프록시는 기존과 동일. 화면을 `SummaryBand`/`ItemForm`/`ItemList` 컴포넌트로, 로직을 `useInventory` composable로 분리.
 - 2026-08-27: EC2 공유 postgres 컨테이너명 `auto-postgres` → `yangyag-postgres`. house-inventory `.env`의 `DB_HOST`를 맞추고 재기동 후 `/api/items` 200 확인.
+- 2026-09-14: EC2 DB를 `auto` DB `house` 스키마(`house` 롤)에서 `app` DB `house` 스키마(`yangyag` 롤)로 이관. 기존 스키마·롤 삭제, 접속 계정을 `yangyag`로 변경. (EC2 구동 검증은 별도 예정)
 
 Chromium 확인 시 생성한 참고 스크린샷:
 
